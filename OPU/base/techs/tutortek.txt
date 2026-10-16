@@ -1,0 +1,626 @@
+;   Technology tree for Tutorial mission for Outpost 2.
+;
+;   NOTE:  IMPORTANT!!! PLEASE NOTIFY ALLEN MCPHEETERS OF ANY CHANGES
+;   TO THIS FILE.
+;
+
+BEGIN_TECH "Ion Drive Module" 08801
+    CATEGORY        0
+    COST            0
+END_TECH
+
+BEGIN_TECH "Spider" 02099
+    CATEGORY        0
+    COST            0
+END_TECH
+
+BEGIN_TECH "Evacuation Module" 12599
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 12499
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+
+
+BEGIN_TECH "Tube" 02114
+    CATEGORY        0
+    COST            0
+END_TECH
+
+BEGIN_TECH "Common Ore Mine" 02108
+    CATEGORY        0
+    COST            0
+END_TECH
+
+BEGIN_TECH "Cybernetic Teleoperation" 03408
+    CATEGORY        4
+    DESCRIPTION     "Allows production of Vehicle Factory structure kits at the Structure Factory.  _______________________________________ Our Cybernetic Teleoperation project has resulted in an upgrade to the Command Center's Savant computers and communications capabilities.  In addition, all vehicle designs now include the less expensive Noesis computer, utilizing elements of the Savant technology.  This transfers much of the computing burden from the Command Center to the vehicle itself."
+    TEASER          "Allows production of Vehicle Factory structure kits at the Structure Factory.  _______________________________________ Prior to the evacuation from our original colony site, Workers remotely operated our vehicles using a technology called Teleoperation.  Since the catastrophe, we no longer have enough Workers to Teleoperate our vehicles.  The Savant computers at the Command Center have taken on part of this burden, but the job is taxing their capacity.  We need a specialized computer vehicle control system.  This Cybernetic Teleoperation project should allows us to operate a much larger number of vehicles."
+    COST            300
+    MAX_SCIENTISTS  5
+    LAB             2
+END_TECH
+
+BEGIN_TECH "Vehicle Factory" 03502
+    CATEGORY        0
+    REQUIRES        03408
+    COST            0
+END_TECH
+
+BEGIN_TECH "Plasma Geometry" 03701
+    CATEGORY        0
+    IMPROVE_DESC    "Increased Power output"
+    COST            0
+    UNIT_PROP TOKAMAK Production_Capacity 300
+END_TECH
+
+BEGIN_TECH "Hypnopaedia" 05309
+    CATEGORY        0
+    IMPROVE_DESC    "Reduced training time"
+    COST            0
+    UNIT_PROP UNIVERSITY Storage_Capacity 1000
+END_TECH 
+
+; Items below are not actually available for research, but will be 
+; activated by a trigger.
+
+BEGIN_TECH "Agridome" 02101
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+BEGIN_TECH "Residence" 02109
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+BEGIN_TECH "Tokamak" 02112
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+BEGIN_TECH "Medical Center" 03303
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+BEGIN_TECH "Nursery" 03304
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+BEGIN_TECH "Concrete Wall" 05106
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH 
+
+BEGIN_TECH "Rare Ore Mine" 05110
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH 
+
+BEGIN_TECH "Geothermal Power" 05115
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+BEGIN_TECH "Earthworks Constructor" 03606
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+BEGIN_TECH "SULV" 05503
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+BEGIN_TECH "EDWARD Satellite" 05504
+    CATEGORY        0
+    DESCRIPTION     "This space intentionally left blank."
+    TEASER          "This space intentionally left blank."
+    COST            3
+    MAX_SCIENTISTS  1
+    LAB             3
+END_TECH
+
+; UNAVAILABLE TOPICS
+; These topics are required because they are referred to in the spreadsheets, but they are 
+; not available for research in the Plymouth Demo Mission.
+
+BEGIN_TECH "NOT AVAILABLE" 02103
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 02104
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 02106
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 02107
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 02110
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 02111
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 02115
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03101
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03201
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 03202
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 03301
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03302
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03305
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03306
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 03501
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03601
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03602
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03603
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03604
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03605
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03607
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03608
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03609
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03610
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03801
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 03851
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 05101
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 05102
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 05104
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05107
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05108
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05116
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05201
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05202
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05302
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 05303
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 05304
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 05401
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 05405
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05501
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05502
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05506
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 05508
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05602
+    CATEGORY        0
+    COST            -1
+END_TECH 
+
+BEGIN_TECH "NOT AVAILABLE" 05701
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 07102
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 07103
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 07104
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08051
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08102
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08103
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08104
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08105
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08106
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08201
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08203
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08317
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08401
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08503
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08601
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08901
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 08951
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10101
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10102
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10202
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10203
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10204
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10205
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10206
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10207
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10208
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10209
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 10401
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+BEGIN_TECH "NOT AVAILABLE" 12201
+    CATEGORY        0
+    COST            -1
+END_TECH
+
+
+
+;  NOT AVAILABLE:
+;
+;  The following topics are listed as "NOT AVAILABLE" in this tech tree.
+;
+;  02103 Command Center
+;  02104 Structure Factory
+;  02106 Basic Laboratory
+;  02107 Light Tower
+;  02110 Common Ore Smelter
+;  02111 Common Metals Storage Tanks
+;  02115 Trade Center
+;  03101 Standard Lab
+;  03201 Earthquake Prediction
+;  03202 Volcanic Eruption Prediction
+;  03301 DIRT
+;  03302 GORF
+;  03305 University
+;  03306 Recreation Facility
+;  03501 Robot Command Center
+;  03502 Vehicle Factory
+;  03601 Scout
+;  03602 Laser Turret
+;  03603 Microwave Turret
+;  03604 Cargo Truck 
+;  03605 Construction Vehicle
+;  03606 Earthworks Constructor
+;  03607 Evacuation Transport
+;  03608 Robo-Dozer
+;  03609 Robo-Miner
+;  03610 Robo-Surveyor
+;  03801 Guard Post
+;  03851 Light Combat Chassis (Lynx)
+;  05101 Consumer Goods Factory
+;  05102 Garage
+;  05104 Advanced Lab
+;  05107 ASE Converter
+;  05108 Forum
+;  05116 Factory, Arachnid and Spider
+;  05201 Medium Combat Chassis
+;  05202 StickyFoam Turret
+;  05302 Electrical Storm Prediction
+;  05303 Vortex Prediction
+;  05304 Volcanic Eruption Prediction
+;  05401 Repair Vehicle
+;  05405 Spaceport
+;  05501 Rare Ore Smelter
+;  05502 Rare Metals Storage Tanks
+;  05506 Rail Gun Turret
+;  05508 EMP Turret
+;  05602 Cannon Turret
+;  05701 Lava Wall
+;  07102 Starflare Turret
+;  07103 ESG Turret
+;  07104 Scorpion
+;  08051 Observatory
+;  08103 Magma Well
+;  08104 Advanced Residence
+;  08105 Reinforced Residence
+;  08106 Meteor Defense
+;  08201 Heavy Combat Chassis
+;  08203 Supernova Turret
+;  08401 Microbe Wall
+;  08503 Corrosive Acid Turret
+;  08601 Orbital Space Station
+;  08901 Starship Superstructure II
+;  08951 Fueling Systems
+;  10101 RLV
+;  10102 Thor's Hammer Turret
+;  10202 Ship's Computer
+;  10203 Ship's Propulsion System
+;  10204 Solar Power Satellite & Array
+;  10205 Starship Hull and Shielding
+;  10206 Starship Long-Range Sensors
+;  10207 Starship Superstructure III
+;  10208 Suspended animation
+;  10209 Starship Short-Range Sensors
+;  10401 Ship's Power Distribution System
+;  12201 EMP Missiles
+
+
+; Garbage so checksum matches original:{‚àú

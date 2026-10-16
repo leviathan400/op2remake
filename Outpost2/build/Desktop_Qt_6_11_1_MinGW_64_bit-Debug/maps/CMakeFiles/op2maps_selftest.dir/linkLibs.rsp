@@ -1,0 +1,1 @@
+ libop2maps.a ../sim/libop2sim.a D:/opu/op2remake/Outpost2/third_party/OP2UtilityC/libOP2Utility.dll.a -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

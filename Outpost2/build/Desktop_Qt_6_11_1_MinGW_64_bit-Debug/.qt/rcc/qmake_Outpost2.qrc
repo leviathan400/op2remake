@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt/qml/Outpost2">
+    <file alias="qmldir">D:/opu/op2remake/Outpost2/build/Desktop_Qt_6_11_1_MinGW_64_bit-Debug/Outpost2/qmldir</file>
+  </qresource>
+</RCC>
+

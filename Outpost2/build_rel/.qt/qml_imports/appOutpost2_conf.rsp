@@ -1,0 +1,14 @@
+-rootPath
+D:/opu/op2remake/Outpost2
+-cmake-output
+-output-file
+D:/opu/op2remake/Outpost2/build_rel/.qt/qml_imports/appOutpost2_conf.cmake
+-importPath
+D:/opu/op2remake/Outpost2/build_rel
+-importPath
+D:/opu/op2remake/Outpost2/build_rel/Outpost2
+-importPath
+C:/Qt/6.11.1/mingw_64/qml
+-qrcFiles
+D:/opu/op2remake/Outpost2/build_rel/.qt/rcc/qmake_Outpost2.qrc
+D:/opu/op2remake/Outpost2/build_rel/.qt/rcc/appOutpost2_raw_qml_0.qrc

@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="/qt/qml/Outpost2/">
+    <file alias="Main.qml">D:/opu/op2remake/Outpost2/Main.qml</file>
+    <file alias="Theme.qml">D:/opu/op2remake/Outpost2/Theme.qml</file>
+    <file alias="RedNavButton.qml">D:/opu/op2remake/Outpost2/RedNavButton.qml</file>
+    <file alias="DebugPanel.qml">D:/opu/op2remake/Outpost2/DebugPanel.qml</file>
+    <file alias="ResourcesPanel.qml">D:/opu/op2remake/Outpost2/ResourcesPanel.qml</file>
+    <file alias="SpacePanel.qml">D:/opu/op2remake/Outpost2/SpacePanel.qml</file>
+    <file alias="SelectionPanel.qml">D:/opu/op2remake/Outpost2/SelectionPanel.qml</file>
+  </qresource>
+</RCC>
+

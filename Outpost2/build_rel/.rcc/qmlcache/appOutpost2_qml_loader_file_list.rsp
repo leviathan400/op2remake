@@ -1,0 +1,11 @@
+--resource
+D:/opu/op2remake/Outpost2/build_rel/.qt/rcc/qmake_Outpost2.qrc
+--resource
+D:/opu/op2remake/Outpost2/build_rel/.qt/rcc/appOutpost2_raw_qml_0.qrc
+/qt/qml/Outpost2/Main.qml
+/qt/qml/Outpost2/Theme.qml
+/qt/qml/Outpost2/RedNavButton.qml
+/qt/qml/Outpost2/DebugPanel.qml
+/qt/qml/Outpost2/ResourcesPanel.qml
+/qt/qml/Outpost2/SpacePanel.qml
+/qt/qml/Outpost2/SelectionPanel.qml

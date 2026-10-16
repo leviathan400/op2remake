@@ -1,0 +1,3 @@
+[D:<SLASH>opu<SLASH>op2remake<SLASH>Outpost2]
+importPaths="D:/opu/op2remake/Outpost2/build/Desktop_Qt_6_11_1_MinGW_64_bit-Debug;D:/opu/op2remake/Outpost2/build/Desktop_Qt_6_11_1_MinGW_64_bit-Debug/Outpost2;C:/Qt/6.11.1/mingw_64/qml"
+resourceFiles="D:/opu/op2remake/Outpost2/build/Desktop_Qt_6_11_1_MinGW_64_bit-Debug/.qt/rcc/qmake_Outpost2.qrc;D:/opu/op2remake/Outpost2/build/Desktop_Qt_6_11_1_MinGW_64_bit-Debug/.qt/rcc/appOutpost2_raw_qml_0.qrc"

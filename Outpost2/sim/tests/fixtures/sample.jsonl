@@ -1,0 +1,7 @@
+{"type":"meta","source":"synthetic","format":"op2_cmdlog_v1"}
+{"tick":0,"op":"<START_GAME>","op_id":4294967294,"len":0,"data_hex":""}
+{"tick":10,"op":"ctMoMove","op_id":2,"len":11,"data_hex":"0105000100040002000000","player":0}
+{"tick":50,"op":"ctMoBuild","op_id":6,"len":18,"data_hex":"010a0001000000000a000c000d000f00ffff","player":1}
+{"tick":100,"op":"ctChat","op_id":48,"len":7,"data_hex":"00ff474c204846","player":0}
+{"tick":200,"op":"ctMoResearch","op_id":22,"len":6,"data_hex":"1400490d0500","player":0}
+{"tick":500,"op":"ctQuit","op_id":49,"len":2,"data_hex":"0102","player":2}

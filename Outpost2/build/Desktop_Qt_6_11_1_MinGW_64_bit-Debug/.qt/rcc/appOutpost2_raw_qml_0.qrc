@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt/qml/Outpost2/">
+    <file alias="Main.qml">D:/opu/op2remake/Outpost2/Main.qml</file>
+  </qresource>
+</RCC>
+

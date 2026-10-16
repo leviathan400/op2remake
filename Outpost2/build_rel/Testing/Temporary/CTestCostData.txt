@@ -1,0 +1,3 @@
+op2sim_selftest 1 0.0378166
+op2maps_selftest 1 0.0325668
+---

@@ -1,0 +1,294 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-d7ec666f61ed7d13fbc6.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18
+					]
+				},
+				{
+					"build" : "sim",
+					"jsonFile" : "directory-sim-Debug-20cd403779174efaa843.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "sim",
+					"targetIndexes" : 
+					[
+						21,
+						22
+					]
+				},
+				{
+					"build" : "maps",
+					"jsonFile" : "directory-maps-Debug-b941d9e4071bced365aa.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "maps",
+					"targetIndexes" : 
+					[
+						19,
+						20
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1,
+						2
+					],
+					"name" : "Outpost2",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17,
+						18,
+						19,
+						20,
+						21,
+						22
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "all_aotstats::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_aotstats-Debug-ff34c591c26b761fcc7d.json",
+					"name" : "all_aotstats",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "all_qmllint::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_qmllint-Debug-35f6fabde611e4e775d5.json",
+					"name" : "all_qmllint",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "all_qmllint_json::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_qmllint_json-Debug-a0f6c7736976ec23aae0.json",
+					"name" : "all_qmllint_json",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "all_qmllint_module::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_qmllint_module-Debug-ed32c0b491a032468f90.json",
+					"name" : "all_qmllint_module",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "all_qmltyperegistrations::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-all_qmltyperegistrations-Debug-da9349e96af70a10dc08.json",
+					"name" : "all_qmltyperegistrations",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2-Debug-2dd869e062b3936b28a8.json",
+					"name" : "appOutpost2",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_autogen-Debug-9532edf966ffbd9bba0a.json",
+					"name" : "appOutpost2_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_autogen_timestamp_deps-Debug-d5163827d774050c2807.json",
+					"name" : "appOutpost2_autogen_timestamp_deps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_copy_qml::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_copy_qml-Debug-230197db319af4252a4e.json",
+					"name" : "appOutpost2_copy_qml",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_copy_res::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_copy_res-Debug-849415d444b507add8df.json",
+					"name" : "appOutpost2_copy_res",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_qmlimportscan::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_qmlimportscan-Debug-368851630ade1b4b592a.json",
+					"name" : "appOutpost2_qmlimportscan",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_qmllint::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_qmllint-Debug-d5754d32ad332fdfed05.json",
+					"name" : "appOutpost2_qmllint",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_qmllint_json::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_qmllint_json-Debug-13488b7b3a960883f67e.json",
+					"name" : "appOutpost2_qmllint_json",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_qmllint_module::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_qmllint_module-Debug-3cd7849be1f0b7b9b27e.json",
+					"name" : "appOutpost2_qmllint_module",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "appOutpost2_qmltyperegistration::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-appOutpost2_qmltyperegistration-Debug-571995977009e161d543.json",
+					"name" : "appOutpost2_qmltyperegistration",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "clean_qml_context_properties::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-clean_qml_context_properties-Debug-b8fb900d348a04f2df27.json",
+					"name" : "clean_qml_context_properties",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dump_qml_context_properties::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dump_qml_context_properties-Debug-ece6ef88e386d235d262.json",
+					"name" : "dump_qml_context_properties",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "generate_qmlls_build_ini_file::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-generate_qmlls_build_ini_file-Debug-81cd13e6675f6c4129f0.json",
+					"name" : "generate_qmlls_build_ini_file",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "module_appOutpost2_aotstats_target::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-module_appOutpost2_aotstats_target-Debug-d72a19e1e53589d33d3a.json",
+					"name" : "module_appOutpost2_aotstats_target",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "op2maps::@13ba6afabf2731f67bb2",
+					"jsonFile" : "target-op2maps-Debug-2f8f3f5b25b35a9625dc.json",
+					"name" : "op2maps",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "op2maps_selftest::@13ba6afabf2731f67bb2",
+					"jsonFile" : "target-op2maps_selftest-Debug-9babfa39b7eb57492517.json",
+					"name" : "op2maps_selftest",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "op2sim::@b622755370c2a46d4cb5",
+					"jsonFile" : "target-op2sim-Debug-edfb578927e18ec0e81a.json",
+					"name" : "op2sim",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "op2sim_selftest::@b622755370c2a46d4cb5",
+					"jsonFile" : "target-op2sim_selftest-Debug-9d3094e0afe34847bf9b.json",
+					"name" : "op2sim_selftest",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "D:/opu/op2remake/Outpost2/build/Desktop_Qt_6_11_1_MinGW_64_bit-Debug",
+		"source" : "D:/opu/op2remake/Outpost2"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

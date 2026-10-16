@@ -1,0 +1,15 @@
+{
+    "formatRevision": 1,
+    "modules": [
+        {
+            "moduleFiles": [
+                {
+                    "entries": [
+                    ],
+                    "filePath": "D:/opu/op2remake/Outpost2/Theme.qml"
+                }
+            ],
+            "moduleId": "Outpost2(appOutpost2)"
+        }
+    ]
+}
