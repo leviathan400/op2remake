@@ -4,6 +4,325 @@ Running notes of what we've built. Newest entries on top.
 
 ---
 
+## 2026-10-28 — The app runs the sim; click to move
+
+- `TilesetView` owns an `op2::sim::Game` (its `map_`/`world_` are the Game's). On a mission,
+  `advanceAnimation` runs one `Game::step` per game tick the GameClock produced, so the
+  game speed setting paces the sim. `Game::restart(seed)` starts a loaded mission at tick 0
+  (seed 1 for now); the local player is the only human player.
+- Left-click on empty ground with one of your vehicles selected queues a `ctMoMove` packet
+  for the next tick; the selection stays. Right-click still deselects.
+- `syncVehicles` re-seats each placed vehicle on its unit's pixel and facing every frame,
+  re-blitting the chassis (and turret) when the facing changes; the turret faces forward
+  while driving and the idle wander picks up again when it stops. The selection box
+  follows the unit's pixel.
+- Vehicle types now get Track Type, Move Points, Turn Rate and Sight range from
+  vehicles.txt, and buildings their Docking Loc E/P, as `op2inspect` already did.
+- Not yet: the app's mission units have no sim weapon (the weapon is still a name for the
+  renderer), so there's no combat in the app; no Stop button; the debug panel's Tick is the
+  GameClock's, not the Game's.
+
+---
+
+## 2026-10-28 — OP2UtilityC 1.2.0.0; first build with Qt 6.12 / MinGW
+
+- `third_party/OP2UtilityC` updated to 1.2.0.0 (C ABI 2) from
+  github.com/leviathan400/OP2UtilityC `c9bb829`, built with Qt's MinGW 13.1 (static C++
+  runtime; its smoke test passes). The header is unchanged apart from line endings: the
+  tileset-source queries op2maps uses were already in. Adds the MinGW import library
+  `libOP2Utility.dll.a`, which `maps/CMakeLists.txt` links but which wasn't in the tree,
+  and a README with the source, versions and build recipe.
+- First full build with the project's own toolchain since the sim work (r459): Qt 6.12.0,
+  MinGW 13.1, Ninja. The app, `op2inspect` and both self-tests build; `ctest` passes
+  (op2sim_selftest, op2maps_selftest).
+- The sim is deterministic across compilers: `cmb_duel_laser` (tick 335), `cmb_structure`,
+  `cmb_guardpost` and `obstacle_symmetric` (tick 700) end on the same checksum built with
+  MSVC and with MinGW.
+- CLAUDE.md: configure line for Qt 6.12, `-j 2` (cc1plus runs out of memory at Ninja's
+  default parallelism when RAM is short), `op2inspect` needs the MinGW runtime on PATH.
+
+---
+
+## 2026-10-27 — Guard Posts and structure destruction
+
+From our op2kb (COMBAT.md §1, the decompile of `GuardPost.ScanForTargets` 0x0042CF20,
+`GuardPost.FireWeapon` 0x0042D120, `Building.IsEnabled` 0x00483710, `Building.UpdateAnimation`
+0x00408A20, `Building.Explode` 0x00483160, `CheckSpontaneouslyExplode` 0x00409400) and
+op2-rs's measured findings; our own code in `combat.cpp`.
+
+- **Guard Posts** run the tanks' weapon process every tick (heartbeat search, idle turret
+  at the post's Power required, 10), fire only when enabled (powered, not EMPed or idle,
+  damage < ¾ HP), and on heartbeat ticks scan: retaliate on an attacker within 75 ticks
+  (a dead one clears the order and is asked again each beat), else search, else the
+  powered sweep (`(index ^ tick >> 9) & 3`), then drop a target out of range. Attack orders
+  on posts take the target once in range. **Linked** posts reach a tile further (cap 7)
+  and their shots carry 0x90: ×1.5 damage, 32 px more reach.
+- `UnitFlag::Powered` stands in for the colony's power/worker/scientist bits and `Linked`
+  for a tube group with an operational Command Center: the remake has neither yet.
+  `op2inspect` sets Powered from op2-rs's `"powered": true` and Linked when a powered
+  structure touches its owner's Command Center (an approximation).
+- **Structure death**: dead at once; on its next turn the destroyed animation and a
+  footprint-sized visual explosion start; deleted 10 turns later (5 + the animation's 5
+  frames, as measured for a Common Storage, Agridome and Tokamak). Then the footprint,
+  dock included, becomes Dozed Area; Explosion Size 2/3 leaves a BLD_EXPL_MED/BIG object
+  running the explosive pass on its neighbours; each rubble piece draws `Rand(tiles left)`
+  for its tile and `Rand(4)` for its graphic, commons first.
+- **Spontaneous explosions** every 1179th tick: a structure with an Explosion Size and
+  damage ≥ HP/10 draws `Rand(500)` against `damage·10/HP + 3`.
+- **Docks**: building.txt's Docking Loc E/P put a dock tile on the footprint's bottom row;
+  it isn't the structure's for damage, line of sight or path planning.
+- **Correction**: the target search covers the weapon's range (+1 linked), not
+  min(range, sight) as the previous entry said; both terms of the exe's min() read the
+  weapon (op2-rs measured a linked range-4 post finding a truck at 5).
+- The map's cell types are now game state (razing, rubble): `Game` saves (format v2) and
+  checksums them.
+- Checked with op2-rs's scenarios: `cmb_structure` does exactly 60 per rail-gun shot to the
+  Common Storage (its dock half misses) and deletes it 11 ticks after the killing shot, both
+  as measured; `tur_guardpost_powered` and `cmb_guardpost` fire from the linked post.
+- **+10 self-test checks** (now **178**): unpowered posts never fire, powered ones kill,
+  the linked reach and ×1.5, structure death timing, razing and rubble, the razed map saved,
+  a post's explosion wrecking its neighbour, the dock tile, the Rand(500) roll on tick 1179.
+- Not yet: the size-1 Blast (EMP ring), per-structure destroyed-animation lengths, the
+  0x2A odds scaling of spontaneous explosions, killing a vehicle mid-dock, Tokamak wear,
+  colony power reaching posts at tick 33 (here they're powered from the start), tube
+  networks, Garage/Mine overrides of Explode.
+
+---
+
+## 2026-10-27 — Combat: tanks fight
+
+Learned from our op2kb (`docs/engine/COMBAT.md`, `WEAPONS.md`, the decompile of
+`UnitTypeInfo:Weapon.Process` 0x004A7BC0, `Map.HasLineOfSight` 0x00436FA0 and the shot's
+ProcessForGameCycle/ProcessTimers cases) and op2-rs's measured findings (FINDINGS
+"Turrets and weapon fire", "Combat"; notes/findings-turret.md, findings-combat.md); our own
+code in `sim/include/op2/sim/combat.h` / `src/combat.cpp`, nothing pasted.
+
+- **Turn order** per object as ProcessUnits (0x0043AD30): Attack-order handling and the
+  weapon (ProcessForGameCycle), then the heartbeat (attacker expiry, Tank::DoEvent) and
+  the action (ProcessTimers: movement).
+- **The weapon**: reload, heartbeat-only search (a found target fires next tick), the idle
+  turret's 16 moods (spin, settle at Move Points, Rand(256) swing; remapped while moving),
+  dead targets noticed after the reload.
+- **Target search** (0x004A6EA0): walk the y-sorted list up then down within 32·r px, first
+  enemy in the box (x strict, y inclusive), r = min(weapon range, sight); IsVehicle while
+  moving and IsOffensive with an order (people only in DoEvent's search); auto-targetable
+  structures only; line of sight for direct-fire weapons.
+- **Shots are objects** (indices, processing order): coarse aim at the turret rate, DoFire
+  (aim lead by flight time, four RNG draws x+ y+ y- x-, range clamp with the exe's cos byte
+  table 0x004E9B30), fine aim, beam ObjWait 4 / projectile flight max(3, d/16+1), damage,
+  then the hit animation (laser 10, cannon 11, rail 41 ticks, op2-rs measured).
+- **Damage** (0x004A3690): splash round the impact; vehicles `(R-d)·base/R`, structures
+  `base/2` per footprint tile within max(R, 26); `base = armor·conc >> 8 + pen`, armor class
+  → 256/180/130/90/60/40 (0x004E1518). Last-attacker bookkeeping with references.
+- **Death**: dead at once, deleted 5 turns later, leaving a 26-tick explosion object.
+- **Line of sight** (0x00436FA0): Bresenham walk splitting diagonals, blocked by structure
+  footprints and cells 6, 8, 9, 11, 22-25 (read from the terrain init 0x0040B5F0), cliffs
+  excepted next to either end.
+- **Bearing** (0x0045C630) exact in integers: trunc toward zero of atan2·128/π via cross
+  products against a 2^30 sine table (east is double-width, 45° multiples exact).
+- **Retaliation** (150 ticks), a person's tank calling idle allies within 96 px (12 ticks),
+  700-tick attacker expiry; **Attack orders** (`ctMoAttackObj`, `makeAttackCommand`)
+  checked every other tick, chasing to within range − 2 (moving target) − 1.
+- `Unit` gains combat and shot state; its fields are now listed once (`forEachUnitField`)
+  for save/load and the checksum. `World` gains weapon types and the human-players mask.
+  Save format v7.
+- `op2inspect`: weapons.txt, Sight range, Can be AutoTargeted, spawn `weapon`, scenario
+  `Attack` orders, player 0 human; `units` shows guns, shots and explosions.
+- Checked: `cmb_duel_laser` lands 32, 35, 28, 35, 32, 30, 28, 35, 32 on spawn 1 (op2-rs
+  measured the first six on the original) and both tanks die at 334/335, gone by 341
+  (op2-rs: both gone at 340). The rail, cannon and microwave duels play out.
+- **+15 self-test checks** (now **168**): bearing, cos table, armor, the duel's measured
+  damage, death timing and explosions, save/restore mid-fight, an Attack chase, retaliation,
+  line of sight (rock, cliff edge, cliff band, structure).
+- Two KB readings that differ from op2-rs's notes: the search box's y bounds are
+  inclusive (op2-rs says strictly inside), and whether a new shot acts on its creation
+  tick depends on where its firer sits in its tile (op2-rs: always the next tick).
+- Not yet: Guard Posts, structures' destruction (destroyed animation, razing, rubble RNG),
+  scorch marks (a `Rand(3)` the RNG stream misses when a vehicle dies on scorchable
+  ground), walls taking damage, EMP / Stickyfoam / ESG / Acid / Thor's Hammer /
+  Starflare / Supernova, muzzle offsets from the art (projectiles fly from the firer's
+  pixel), DIRT, alliances, the alternating Tiger barrel.
+
+---
+
+## 2026-10-23 — Path planning: OP2's coarse planner
+
+Units route round obstacles the way the original does. Learned from our op2kb
+(`docs/engine/PATHFINDER.md`, `PATHFINDER_DEEP_DIVE.md` and the decompile of
+`PathFinder.PlanCoarsePath` 0x0043F6C0 and its helpers); our own code in
+`sim/include/op2/sim/pathfind.h` / `src/pathfind.cpp`, no decompiled code pasted.
+
+- **Greedy octant walk** toward the goal (`direction8`, GetDirection8FromDelta 0x0045C680:
+  integer slope `(dy << 8) / dx` against 0x69/-0x6A and ±0x26A) with **turn collapse**
+  (0x0043FD60: a 90-135 degree pair becomes one rotated step, a reversal cancels both). It
+  replaces the Bresenham line, giving the same measured E SE E SE E E SE E SE E.
+- **Obstacle tracing**: left-hand trace (0x0043FCC0, rotation 7) until a clip edge, the step
+  budget or loop closure (0x0043FE90); closed loops measured both ways round (0x00440030 /
+  0x00440190), open traces retried right-handed, the better spliced in. The measure (distance
+  `max + min/2` in 16.16 plus 32/45 per collapsed step) takes the traced tile nearest the
+  goal; one open detour per plan.
+- Units carry their route (600 steps, two per byte, as OP2's move state at +0xD4), planned
+  on their turn and replanned when it runs out short of the goal or meets a blocked tile;
+  an empty plan ends the order. Save format v6.
+- Movement corrections from the same source (StartNextTileStep 0x0044B760): the diagonal
+  factor is `m * 0x2D4 >> 9`, steps take at least 2 ticks, damage slows a step by
+  `damage * T / maxHP`, and only a turn of more than 16 is made in place (wholly, before
+  the step); smaller turns finish while moving.
+- Checked with op2-rs's measured wall cases: `obstacle_symmetric` and `obstacle_wall` go
+  round the south end, `obstacle_north` the nearer north end, `obstacle_pocket` leaves the
+  pocket and arrives, `terrain_detour` drives straight through the slow patch (all in
+  `op2inspect`; arrival ticks not compared with recorded runs).
+- **+8 self-test checks** (now **153**): octant picker, turn collapse, symmetric and
+  asymmetric walls, the corner cut onto the wall face, an unreachable goal, a Lynx round a
+  wall end to end, slow ground straight through, impassable tile driven round.
+- Not modelled: the AI (RCC) players' corridor search (0x00440770 / 0x00441360), unit
+  bumping (Unit.CanBeBumpedBy; other vehicles never block a plan, a held tile makes the
+  mover wait), the short-path stage (same steps as the greedy walk when it succeeds), night
+  slowdown, x-wrap on 512-wide maps.
+
+---
+
+## 2026-10-23 — Vehicle movement
+
+Vehicles drive, to the timings op2-rs's harness measured on the original (its
+harness/oracle/FINDINGS.md; our own code, `sim/include/op2/sim/movement.h`):
+
+- **Step timing**: `T = floor(m * (ts(A) + ts(B)) / 1024)` straight, `floor(m*sqrt2)` for
+  diagonals, m = Move Points, ts = the cell speed table [cell][track]. The table is built by
+  the game at start-up (CellTypeInfo 0x4DEBC0, filled by 0x40B5F0); values as op2-rs reads
+  them from the running game, two rows checked against the routine's immediates here.
+- **Velocity** `floor(2^21 / T) + 1` per axis in 16.16 pixels, landing exactly on the next
+  centre; no acceleration; steps run back to back.
+- **Turning** on tile centres at the Turn Rate, the shorter way, half turns counter-clockwise;
+  the step starts the tick after the turn.
+- **Orders**: `ctMoMove` / `ctMoStop` packets (`makeMoveCommand`, `makeStopCommand`; vehicles
+  only), taken in one cycle and acted on in the next; a new order or Stop doesn't interrupt the
+  step in progress.
+- **Routes** are Bresenham lines (10 east by 4 south: E SE E SE E E SE E SE E, as measured); a
+  unit claims the tile it steps into and others wait on their centre for it.
+- `Unit` gains the driving state, `UnitType` track/Move Points/Turn Rate; save format v5.
+- `op2inspect` reads Track Type, Move Points and Turn Rate from vehicles.txt, carries out
+  scenario `Move`/`Stop` orders and `order --cmd Move --x --y`, and shows each unit's route.
+  `line_fast.json`: the Lynx drives 30 fast tiles at 24 ticks each and stands on (42, 22) at
+  tick 731.
+- **+16 self-test checks** (now **145**): ticks per tile for the Lynx on every ground type and
+  diagonals, the Tiger, mixed steps (27, 34, 31), the corner and half-turn rules, velocity and
+  landing, the Bresenham spread, waiting for a held tile, impassable ground, Stop and a new
+  order mid-step, save/restore mid-step, no Move for structures.
+- Gaps: no routing round obstacles (OP2's wall-following planner, 0x43F6C0, isn't in
+  op2-rs's notes; a blocked unit stops), no night or damage slowdown, no x-wrap on 512-wide
+  maps, and order-tick numbering not yet compared against a recorded run.
+
+---
+
+## 2026-10-23 — Headless play: `op2inspect` and `op2::sim::Game`
+
+- **`op2::sim::Game`** (`sim/include/op2/sim/game.h`): clock + RNG + World + map in one
+  object. `step()` applies the queued command packets, runs every unit's turn in processing
+  order (empty until movement/combat), advances the clock, and returns rejected packets.
+  Save/restore covers clock, RNG, queue and World; map and types are inputs.
+- **`op2inspect`** (`Outpost2/tools/inspect/`, no Qt): `load` / `step` / `units` /
+  `region` / `info` / `order`, reading op2-rs's scenario JSON, so its oracle scenarios load
+  as they are. Maps from OPU's loose `OPU/base/maps/**` (OPU ships the .vol contents
+  extracted; every map the op2-rs scenarios use is there), unit types and
+  footprints from `vehicles.txt`/`building.txt`. Each call restores and rewrites a session
+  file holding a `Game` save. A small integer-only JSON reader (`tools/inspect/json.h`).
+  docs/HEADLESS.md.
+- Checked against op2-rs: on `cmb_duel_laser.json` both tanks are placed exactly where
+  op2-rs's inspector puts them (px (976, 976) and (1072, 1008), tiles (30, 30) and
+  (33, 31)). 500 ticks in one call and 5 × 100 in five calls end on the same checksum.
+- **+5 self-test checks** (now **129**): Game step order, rejected packets, mid-run
+  save/restore with a queued packet, truncated save rejected.
+- Not yet: nothing moves or fights, so the duel ends with both tanks at full health
+  (op2-rs: both destroyed by tick 340).
+
+---
+
+## 2026-10-21 — Sim foundations 3: OP2's object-index allocator, heartbeat phase
+
+Decoded by hand from Outpost2.exe's bytes (allocation 0x439A10, MapObject::~MapObject
+0x439C20/0x439C90; full table in docs/GAME_OBJECTS.md) and implemented in `World`:
+
+- **Indices as OP2 hands them out.** 1..0x3FF (index 0 never used, at most 0x3FF live). A
+  destroyed unit's index goes on a freed ring with its tick; a spawn takes the first ring
+  entry, from the head, freed more than 128 ticks ago with no references left (MapObject
+  +0x32, `addRef`/`releaseRef`), else a fresh `last + 1`. Was: a LIFO free list reused at
+  once. Exe quirks kept: the head wraps at 0x3FF but the tail at 0x400 (an entry is dropped
+  after 1023 reuses), and a failed fresh allocation leaves the count one higher.
+- `World::setTick` (spawn/destroy read the tick, as OP2 reads its global).
+- **Heartbeat helpers**: `isHeartbeatTick(index, tick)` = `(index ^ tick) & 7 == 0` and
+  `idleMood(index, tick)` = `(index ^ tick >> 8) & 15`.
+- Save format **v4**: per-slot free tick and references, ring head/tail/entries and the
+  object count (last index = slot count - 1), all validated on load; in the checksum.
+- Mission load logs an object that gets no index (more than 0x3FF in a mission).
+- **+12 self-test checks** (now **124**): the 128-tick delay boundary (freed at 10:
+  not reused at 138, reused at 139), references holding an index, first-eligible scan
+  order, the 0x3FF head wrap (fresh index on cycle 1024), the 0x3FF limit, allocator
+  save/checksum, heartbeat and idle mood.
+- Checked only against our decode, not yet against a recorded game: the op2-rs harness
+  traces the allocator (`alloc`: last index and the ring with free ticks and reference
+  counts), so a recorded combat run would confirm it.
+
+---
+
+## 2026-10-21 — Sim foundations 2: pixel positions, damage, processing order
+
+Second alignment step with the original's measured behaviour (facts from op2-rs's oracle
+findings and notes; our own code).
+
+- **`coords.h`** — the spatial rules in one place, each with its source: world pixel =
+  tile*32 + offset in the map file's frame; tile centres at +16; a structure's pixel is
+  its footprint centre (`structurePx`/`structureTopLeft`); the engine's tile x = file x
+  + 32 on non-wrapping maps, none on 512-wide maps, which wrap; heading 0 = east,
+  64 = south, clockwise, with the 8 step directions; `turnTowards` (the shorter way, an
+  exact half turn counter-clockwise, snap within a step).
+- **`Unit` position is a pixel** (`px/py` + the 16.16 `subX/subY`, biased 0x8000)
+  instead of a tile; the tile is derived. This also removes a mismatch: `world.h` said
+  `tileX/tileY` was the top-left footprint tile while the loader stored the .opm centre
+  tile. Render reads (`placeFromWorld`, hover, selection, focus) take the pixel.
+- **`damage` replaces `hitPoints`** (MapObject +0x1E); `World::hitPoints(u)` derives HP
+  from the type's max, so a future max-HP upgrade raises current HP as in OP2.
+- **`turret`** heading byte, starting at 0 (east) whatever the chassis faces.
+- **Processing order** in `World` (OP2's object list): sorted by pixel y, new objects
+  in front of their row (0x439B53), `processUnits` runs every object in order and then
+  stable-sorts by pixel y (0x43E8F0); spawns and destroys while processing keep the
+  cursor right (no object runs twice or is skipped). Saved and checksummed.
+- Save format **v3** (pixel, sub-pixel, damage, turret, order); the order is validated
+  on load (each live slot exactly once).
+- **+24 self-test checks** (now **112**): coordinate and turn rules, order insertion,
+  re-sort, mid-tick spawn/destroy, order save/checksum, derived HP.
+- Not done: OP2's lazy object-index allocator (0x439A10, reuse after 128+ ticks; the
+  index sets the 8-tick heartbeat phase). Our slots are reused immediately; see
+  docs/GAME_OBJECTS.md.
+
+---
+
+## 2026-10-21 — Sim foundations: exe-exact SetSeed, World in the checksum, safe World load
+
+First step of aligning the sim with the behaviour op2-rs has measured (facts only: no op2-rs
+code is used; op2-rs is GPL-3).
+
+- **PRNG seeding fixed** (`prng.h`). SetSeed @0x46EFB0 shifts the seed with `sar eax,16`
+  (bytes `C1 F8 10` @0x46EFC2), an *arithmetic* shift; we used a logical one, so every seed
+  with bit 31 set (half of them) gave a different stream. Rand @0x46F000 (taps 0x12000, `jp`
+  after `shr 12`) already matched. The "regression anchor" that only printed values is now
+  **reference vectors** for seeds 1, 12345, 0x80001234, 0xFFFFFFFF and 0, computed from the
+  decoded exe routines.
+- **World in the checksum.** New `checksumSimState(clock, prng, world)` is the whole-sim
+  fingerprint; `checksumCoreState` (clock + RNG) stays for the tick-loop tests. Until now no
+  checksum saw the units at all. `World::foldInto` now also folds the slot layout (each slot's
+  generation + live flag, the free list), so the same units in different slots no longer hash
+  equal: what a UnitId resolves to and where the next spawn lands are state.
+- **`World::deserialize` validates** before accepting a buffer: slot count bounded by the
+  bytes present (no 800 MB allocation from a 12-byte buffer), live flag 0/1, live slots have
+  generation >= 1, `kind` in range, the free list names each dead slot exactly once and no
+  live one, no trailing bytes. A bad buffer could previously make `spawn` write out of range
+  or over a live unit.
+- **+10 self-test checks** (now **88**): exe vectors, slot-layout sensitivity,
+  `checksumSimState`, corrupt free list / slot count / trailing bytes rejected.
+
+---
+
 ## 2026-06-10 — Pre-Phase-3 refactor: sim command layer, shared building-art resolver, modular QML
 
 Three structural fixes from a code review, done now so the sim lands on clean seams:

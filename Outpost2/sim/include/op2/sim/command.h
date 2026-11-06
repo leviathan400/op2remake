@@ -27,8 +27,9 @@
 // replays bit-identically because packets are the complete set of inputs.
 //
 // Implemented opcodes so far: ctMoIdle / ctMoUnidle (take a structure off/
-// online — the detail panel's IDLE button and the debug click-toggle). The
-// rest (move/build/attack/…) arrive with the gameplay sim.
+// online — the detail panel's IDLE button and the debug click-toggle) and
+// ctMoMove / ctMoStop for vehicles (movement.h). The rest (build/attack/…)
+// arrive with the gameplay sim.
 
 namespace op2::sim {
 
@@ -36,8 +37,11 @@ namespace op2::sim {
 // into cmdlog.cpp's name table (from InternalData/DataStructure
 // CommandPacket.txt). Only the ones the remake dispatches are named here.
 namespace Opcode {
+    constexpr std::uint32_t ctMoMove   = 2;  // drive a vehicle to a tile
+    constexpr std::uint32_t ctMoStop   = 5;  // drop a vehicle's route (the step in progress finishes)
     constexpr std::uint32_t ctMoIdle   = 18; // take a structure offline (player intent)
     constexpr std::uint32_t ctMoUnidle = 19; // bring it back online
+    constexpr std::uint32_t ctMoAttackObj = 36; // an armed vehicle attacks a unit (combat.h)
 }
 
 // --- packet builders (UI side) -----------------------------------------------
@@ -49,6 +53,14 @@ namespace Opcode {
 // Build a ctMoIdle (idle=true) or ctMoUnidle (idle=false) packet.
 CommandPacket makeIdleCommand(std::uint32_t tick, int player, UnitId target,
                               bool idle);
+
+// Build a ctMoMove packet: the target handle, then the goal tile (map-file
+// tile, two LE i32s).
+CommandPacket makeMoveCommand(std::uint32_t tick, int player, UnitId target, int tileX, int tileY);
+// Build a ctMoStop packet (payload: the target handle).
+CommandPacket makeStopCommand(std::uint32_t tick, int player, UnitId target);
+// Build a ctMoAttackObj packet: the attacker's handle, then the victim's.
+CommandPacket makeAttackCommand(std::uint32_t tick, int player, UnitId attacker, UnitId victim);
 
 // Decode a unit-targeted payload back into a handle. Returns false (and leaves
 // *out untouched) if the payload is malformed/too short.

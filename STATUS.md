@@ -11,15 +11,17 @@ from the EXE) — buildings grid-exact with OP2 drop-shadows + faithful one-at-a
 Normal/Ambient animations; vehicles in all 16 rotations (combat = chassis ⊕ turret),
 including 20 cargo-laden truck variants. **`.opm` missions now load into the
 deterministic `World` and render (animated) FROM it** — the scene is a view of sim
-state, not a hardcoded parade — though the sim doesn't tick yet (no movement/economy).
+state, not a hardcoded parade. On a mission the app now runs the sim (`Game::step` each
+game tick) and your vehicles drive where you click; no economy yet.
 We're at the boundary of **Phase 2 → Phase 3**.
 
 ## What works today
 
 ### Deterministic sim core (`op2sim`) ✅
-- [x] Dual-LFSR PRNG + Lemire range map
+- [x] Dual-LFSR PRNG + Lemire range map (SetSeed/Rand pinned to exe reference vectors)
 - [x] Tick clock + per-mark gating (`Time() = tick>>2`)
-- [x] State checksum (engine kernel port + streaming hasher)
+- [x] State checksum (engine kernel port + streaming hasher); `checksumSimState` covers the
+      World (units + slot layout)
 - [x] Headless tick loop + cmdlog replay harness + divergence diff
 - [x] **Game-object model** — `World` unit pool + flat `Unit` struct (owner, tile,
       HP, command, cargo, flags) mirroring OP2's design, but handle-based +
@@ -48,7 +50,8 @@ We're at the boundary of **Phase 2 → Phase 3**.
       these commands later is wiring, not redesign.
 - [x] **Object selection + detail panel ("7th view")** — **left-click selects** the object under
       the cursor (building/GuardPost/vehicle); a green selection box outlines it. **Right-click
-      deselects** (left-click on a selected unit will later issue move/commands). The sidebar shows
+      deselects**; with one of your vehicles selected, left-click on empty ground sends it
+      there (a ctMoMove packet). The sidebar shows
       a detail panel in OP2's green (`#00ff00`): **portrait box** (art g54) + per-object **category
       icon** (`ui/tech/Tech_*.png`, hardcoded category map), title `Name #player-index`, armor class
       + HP bar, Status (state-coloured), Weapon, and the building **Power/Workers/Scientists**
@@ -56,7 +59,7 @@ We're at the boundary of **Phase 2 → Phase 3**.
       Kind, World ID, location). Tracked by the stable World handle (survives re-renders). Live
       usage + storage pending the economy sim. `selectAt`/`clearSelection`/`setSelectedIdle`/
       `selectedInfo`; `docs/SELECTION_PANEL.md`. TODO: armor-class names, per-vehicle categories,
-      vehicle command grid + move orders.
+      vehicle command grid (Stop, Attack, …).
 - [x] **Building status light ("computer overlay")** — OP2's dot at each building's
       selection-box corner: **gray = player-Idle** (g49), **red = Disabled** (any condition;
       g48 frame 0, 8-frame flashing for later), **green = Active** (g47); idle>disabled>active.
@@ -79,7 +82,28 @@ We're at the boundary of **Phase 2 → Phase 3**.
       (back to the hand-drawn frame); nothing bundled. **Layout model: stretchable borders** (OP2's
       resize model — corners fixed, borders stretch, any window size). Pieces in: bottom-right
       (`Bitmap_170`) + bottom-left (`Bitmap_169`) corners. Divergence D2; `docs/INTERFACE_SKINS.md`.
-- [x] **78 self-test checks** (`op2sim_selftest`; +10 in `op2maps_selftest`),
+- [x] **Headless play** — `op2inspect` (no Qt): load an op2-rs scenario, step, units,
+      region, info, Idle/Unidle orders; session = a `Game` save. docs/HEADLESS.md
+- [x] **Vehicle movement** (`movement.h`): Move/Stop orders, step timing from the cell
+      speed table and Move Points (damage slows), 16.16 velocity, in-place turns over 16,
+      waiting for held tiles.
+- [x] **Path planning** (`pathfind.h`): OP2's coarse planner (0x0043F6C0) — greedy octant
+      walk, turn collapse, obstacle tracing both ways, detour measure. op2-rs's five obstacle
+      scenarios go round the walls the way the original does. Gaps: the AI (RCC) corridor
+      search, unit bumping (other vehicles never block a plan), night slowdown, x-wrap.
+- [x] **Combat** (`combat.h`): Laser, Microwave, Rail Gun and Cannon tanks — turret aim,
+      idle turret moods, box-walk target search with line of sight, shots as objects (lead,
+      RNG scatter, range clamp, beam wait / projectile flight, linger), splash damage with
+      armor, 5-turn death with an explosion object, retaliation, call-for-help, Attack orders
+      with chase. op2-rs's `cmb_duel_laser` plays to the measured damage (32, 35, 28, 35, 32,
+      30) and both tanks dead by tick 340. Gaps: scorch marks, walls, the status weapons
+      (EMP, foam, ESG, acid, Thor, Starflare/Supernova), muzzle offsets, DIRT, alliances.
+- [x] **Guard Posts and structure destruction**: posts fire when powered (no colony economy:
+      `Powered`/`Linked` are given), linked posts reach +1 and hit ×1.5, retaliate within 75
+      ticks, sweep; destroyed structures play out 10 turns, raze their footprint, drop rubble
+      with the RNG, and size-2/3 ones explode on their neighbours. `cmb_structure` takes 60 per
+      rail-gun shot and deletes the storage 11 ticks after its last hit, as measured.
+- [x] **178 self-test checks** (`op2sim_selftest`; +10 in `op2maps_selftest`),
       integer-only, no Qt/float/clock (firewalled)
 
 ### Data pipeline (loaders) ✅ — verified against real OPU files
@@ -169,20 +193,22 @@ We're at the boundary of **Phase 2 → Phase 3**.
       frame by ore type + bar yield), magma vents + fumaroles + wreckage + objective markers
       (Circle/DNA/Beaker — continuous loops). Art frames cross-checked vs OP2MissionEditor's
       extraction; `ArtFile::groupOfFrame` recovers the animation group from a representative frame.
-      Not yet: mission units don't tick/move (animation only); per-truck cargo amounts, walltubes
-      unparsed.
+      Mission vehicles move and turn from the running sim (`TilesetView::syncVehicles` re-seats
+      them each frame). Not yet: mission weapons aren't sim fields (no combat in the app);
+      per-truck cargo amounts, walltubes unparsed.
 
 ### Tooling / external ✅
 - [x] **OP2UtilityC** — C-ABI DLL fork of OP2Utility
       ([leviathan400/OP2UtilityC](https://github.com/leviathan400/OP2UtilityC))
 
 ## Not done yet
-- [ ] **The simulation doesn't run** — no economy, combat, or research wired in
-      (content loaders exist; nothing consumes them). Mission objects are loaded into the
-      `World` and animate, but the World is static — no movement, placement rules, or
-      pathing. (A plain `.map` still shows the fixed parade grid.)
-- [ ] Renderer driven off the sim tick (building anims advance off the GameClock, but
-      units are static per-direction; nothing moves/rotates from a running sim)
+- [ ] **Most of the game isn't simulated** — no economy or research, and the app's mission
+      units carry no sim weapon yet, so combat runs only headless (`op2inspect`). The sim
+      ticks and vehicles drive; placement rules aren't in. (A plain `.map` still shows the
+      fixed parade grid.)
+- [ ] The app's GameClock keeps its own tick next to the Game's: the debug panel's Tick/Mark
+      count from app launch and don't reset when a map loads, while the Game restarts at 0.
+      One clock should drive both.
 - [ ] `.json` (OP2Mapper) loader still a stub; `.opm` walltubes not parsed (beacons/markers/
       wreckage now render; units' per-cargo amounts not modelled as sim fields yet)
 - [ ] Missions / AI, netcode

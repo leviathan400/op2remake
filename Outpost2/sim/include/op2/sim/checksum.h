@@ -63,13 +63,17 @@ private:
     std::uint32_t h_ = 0;
 };
 
-// Forward declarations — full definitions in clock.h / prng.h.
+// Forward declarations — full definitions in clock.h / prng.h / world.h.
 class Clock;
 class Prng;
+class World;
 
-// Checksum of the deterministic CORE state (clock tick + PRNG state). This is
-// the current whole-sim fingerprint; it grows as subsystems (units, players,
-// map, ...) are added.
+// Checksum of the clock tick + PRNG state only (the headless tick-loop tests).
 std::uint32_t checksumCoreState(const Clock& clock, const Prng& prng) noexcept;
+
+// The whole-sim fingerprint: clock, PRNG and the World (units + slot layout).
+// This is the one lockstep peers and replays compare; it grows as subsystems
+// (players, map changes, ...) are added.
+std::uint32_t checksumSimState(const Clock& clock, const Prng& prng, const World& world) noexcept;
 
 } // namespace op2::sim

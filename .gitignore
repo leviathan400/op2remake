@@ -1,0 +1,12 @@
+# Build output and IDE files
+Outpost2/build/
+Outpost2/build_*/
+Outpost2/.qtcreator/
+*.user
+
+# Outpost 2 game files are not in this repo: the game reads them from your own
+# Outpost 2 1.2 + OPU 1.4.1 install (outpost2.ini [Game] Outpost2=).
+OPU/
+OP2_ART.BMP
+ui/**/*.png
+ui/**/*.bmp

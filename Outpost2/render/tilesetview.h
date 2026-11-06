@@ -15,6 +15,7 @@
 #include "buildingcatalog.h"
 #include "missionloader.h"
 #include "unitcatalog.h"
+#include "op2/sim/game.h"
 #include "op2/sim/map.h"
 #include "op2/sim/sheet.h"
 #include "op2/sim/world.h"
@@ -139,7 +140,8 @@ public:
     int hoverCursorY() const { return static_cast<int>(hoverCursorY_); }
 
     // Selection (the detail panel). selectAt picks the topmost object under the cursor
-    // (building → GuardPost → vehicle); clicking empty ground clears it. The selection box
+    // (building → GuardPost → vehicle); clicking empty ground clears it, or, with one of the
+    // local player's vehicles selected, orders it there (a ctMoMove packet). The selection box
     // is drawn around it; setSelectedIdle toggles the selected structure's player-Idle flag
     // (the panel's IDLE action). Vehicles can't be idled (no-op).
     QVariantMap selectedInfo() const { return selectedInfo_; }
@@ -317,6 +319,10 @@ private:
     bool blitUnitSprite(int group, QImage* img, int* ax, int* ay) const;
     // Step every combat unit's idle turret rotation one notch and re-seat it.
     void advanceUnitTurrets(int gameTicks);
+    // Re-seat each placed vehicle on its World unit's pixel and hull facing after sim
+    // ticks (re-blits the chassis when the facing changes). Returns false if a placed
+    // unit's World object is gone, so the caller rebuilds the placed lists.
+    bool syncVehicles();
 
     // Build a command-report list (factories/labs/…): the LOCAL player's buildings whose name is in
     // displayMap, as { title:"<Display> # p-NN", status:"<verb> Nothing", idx, gen }. Shared by
@@ -364,14 +370,18 @@ private:
     static constexpr int kEdgeMargin = 16;
 
     TilesetManager tilesets_;
-    op2::sim::Map map_;
+    // The whole sim (clock, RNG, World, map). advanceAnimation steps it on a mission; the
+    // view reads it and only changes it through queued command packets (and mission setup).
+    // map_ and world_ name its parts.
+    op2::sim::Game game_;
+    op2::sim::Map& map_ = game_.map();
     bool mapLoaded_ = false;
     QString base_;        // [Game] Outpost2 base dir, kept for runtime map switching
     QImage minimapImage_; // mapW x mapH, one averaged pixel per tile
 
     // .opm mission: objects spawned into the World, rendered by placeFromWorld().
     // When missionMode_ is set, the map view shows the mission (not the static parade).
-    op2::sim::World world_;
+    op2::sim::World& world_ = game_.world();
     bool missionMode_ = false;
     QHash<QString, quint16> typeIdByName_; // map_id name -> World typeId
     QStringList nameByTypeId_;             // typeId -> map_id name
@@ -581,8 +591,16 @@ private:
         QString weapon;           // weapon name for the detail panel (GuardPosts/combat units)
         op2::sim::UnitId sourceId{};
         int centerX = 0, centerY = 0; // unit pixel (footprint centre) for the centred light
+        // A mission vehicle's body and turret art (16 facings each), so syncVehicles can
+        // re-blit them as the sim turns it. bodyDef is null for GuardPosts and the parade;
+        // turretArt is set for bombs too (turretDef, which drives the idle wander, isn't).
+        const UnitDef* bodyDef = nullptr;
+        const UnitDef* turretArt = nullptr;
     };
     std::vector<PlacedUnit> placedUnits_;
+    // Seat a vehicle's chassis at unit pixel upX/upY facing 0..15 (re-blitting it when the
+    // facing changes), and its turret, if any, at turretRot.
+    void seatVehicle(PlacedUnit& pu, int upX, int upY, int facing);
 
     // Change a structure's player-Idle / condition-Disabled status. Exactly one of
     // pb/pu is non-null. Mission objects (valid sourceId) route through the sim

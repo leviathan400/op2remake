@@ -2,6 +2,7 @@
 
 #include "op2/sim/clock.h"
 #include "op2/sim/prng.h"
+#include "op2/sim/world.h"
 
 namespace op2::sim {
 
@@ -74,6 +75,16 @@ std::uint32_t checksumCoreState(const Clock& clock, const Prng& prng) noexcept {
     const Prng::State st = prng.state();
     cs.addU32(st.s0);
     cs.addU32(st.s1);
+    return cs.value();
+}
+
+std::uint32_t checksumSimState(const Clock& clock, const Prng& prng, const World& world) noexcept {
+    Checksummer cs;
+    cs.addU32(clock.tick());
+    const Prng::State st = prng.state();
+    cs.addU32(st.s0);
+    cs.addU32(st.s1);
+    world.foldInto(cs);
     return cs.value();
 }
 

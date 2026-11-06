@@ -17,6 +17,10 @@ add_library(op2sim STATIC
     src/sheet.cpp
     src/morale.cpp
     src/world.cpp
+    src/game.cpp
+    src/movement.cpp
+    src/pathfind.cpp
+    src/combat.cpp
 )
 
 target_include_directories(op2sim PUBLIC

@@ -12,6 +12,9 @@ add_subdirectory(sim)
 # Map-format loaders (depends on op2sim; no Qt).
 add_subdirectory(maps)
 
+# Headless CLI over the sim (no Qt).
+add_subdirectory(tools/inspect)
+
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup(REQUIRES 6.10)

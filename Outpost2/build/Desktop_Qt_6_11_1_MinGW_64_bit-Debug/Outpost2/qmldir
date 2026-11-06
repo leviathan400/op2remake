@@ -1,6 +1,0 @@
-module Outpost2
-typeinfo appOutpost2.qmltypes
-depends QtQuick
-prefer :/qt/qml/Outpost2/
-Main 254.0 Main.qml
-

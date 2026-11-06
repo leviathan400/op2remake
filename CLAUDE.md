@@ -21,17 +21,30 @@ art/render code or the build** — it records the expensive mistakes so you don'
    EXE address / decompile doc (e.g. `Unit.DoAmbientAnimation @0x483580`) like the existing
    code does. The spec lives at `D:\Oupost2Decompile\Remake\` (start with ARCHITECTURE.md).
 
-## Build & test (Windows, Qt 6.11 MinGW)
+## Build & test (Windows, Qt 6.11/6.12 MinGW 13.1)
 
 ```powershell
 # Tools (not on PATH by default):
 #   C:\Qt\Tools\CMake_64\bin\cmake.exe, C:\Qt\Tools\Ninja, C:\Qt\Tools\mingw1310_64\bin
-cmake --build Outpost2/build_rel              # incremental build (Ninja, Release)
+# First configure (Qt 6.12.0 here; 6.11 works too):
+cmake -S Outpost2 -B Outpost2/build_rel -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:/Qt/6.12.0/mingw_64
+cmake --build Outpost2/build_rel -j 2         # incremental build (Ninja, Release)
 ctest --test-dir Outpost2/build_rel           # op2sim_selftest + op2maps_selftest
-# Run the app: needs Qt DLLs — either windeployqt or C:\Qt\6.11.1\mingw_64\bin on PATH.
+# -j 2: with little free RAM, Ninja's default (one compiler per core) runs cc1plus out of
+# memory on the Qt Quick sources ("out of memory allocating 65536 bytes"): not a code error.
+# Run the app: needs Qt DLLs — either windeployqt or C:\Qt\6.12.0\mingw_64\bin on PATH.
 # Without them the exe shows a loader dialog and never reaches main() (no log!).
 # Startup log: Outpost2/build_rel/logs/op2remake-*.txt
+# Headless, no Qt DLLs needed (docs/HEADLESS.md), but the MinGW C++ runtime is
+# (C:\Qt\Tools\mingw1310_64\bin on PATH; without it the exe exits at once, code 53):
+Outpost2/build_rel/tools/inspect/op2inspect load --scenario <op2-rs scenario .json> --game-dir <OPU install>
 ```
+
+`third_party/OP2UtilityC` holds a prebuilt OP2UtilityC (1.2.0.0, C ABI 2): source, build
+recipe and versions in its README.md.
+
+Check a sim change headless with `op2inspect` (step, `units`, `region`, `info`'s checksum)
+before looking at it in the app.
 
 Assets come from an OPU 1.4.1 install pointed to by `outpost2.ini` `[Game] Outpost2=`
 (currently `D:/opu/op2remake` itself — the OPU/ subtree). `[Debug] Map=` picks the startup map.

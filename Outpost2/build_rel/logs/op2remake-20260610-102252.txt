@@ -1,5 +1,0 @@
-10:22:52.879  === Outpost 2: Divided Destiny - debug log ===
-10:22:54.279  space.txt: 23 space objects loaded
-10:22:54.279  load map: D:/opu/op2remake/OPU/maps/PlainsAndPasses/opu_12.opm
-10:22:54.367  mission 'OP2 Remake - curated test placement on opu_12': 35 objects → World, 12 resources
-10:22:54.739  mission render: 12 buildings + 23 units + 12 sprites placed

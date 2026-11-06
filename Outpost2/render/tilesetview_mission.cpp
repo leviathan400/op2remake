@@ -18,6 +18,7 @@
 #include "logger.h"
 #include "missionloader.h"
 #include "op2/maps/maploader.h"
+#include "op2/sim/movement.h"
 
 namespace { constexpr int T = TilesetManager::kTileSize; } // namespace
 
@@ -132,6 +133,9 @@ void TilesetView::populateType(quint16 typeId, const QString& name) {
                 t.powerRequired      = buildingSheet_.cellInt(row, "Power required", 0);
                 t.workersRequired    = buildingSheet_.cellInt(row, "Workers required", 0);
                 t.scientistsRequired = buildingSheet_.cellInt(row, "Scientists required", 0);
+                // The dock tile (bottom row, this column) stays drivable (World::holdsTile).
+                t.dockEden     = static_cast<std::uint8_t>(std::clamp(buildingSheet_.cellInt(row, "Docking Loc E", 0), 0, 8));
+                t.dockPlymouth = static_cast<std::uint8_t>(std::clamp(buildingSheet_.cellInt(row, "Docking Loc P", 0), 0, 8));
             }
         }
     } else {
@@ -142,6 +146,12 @@ void TilesetView::populateType(quint16 typeId, const QString& name) {
             if (row >= 0) {
                 t.maxHitPoints = vehicleSheet_.cellInt(row, "Hit Points", 0);
                 t.armor        = vehicleSheet_.cellInt(row, "Armor Class", 0);
+                // Movement (movement.h): track type, Move Points (lower is faster), Turn Rate.
+                const std::string& track = vehicleSheet_.cell(row, "Track Type W/T/L/M");
+                t.track     = op2::sim::trackFromLetter(track.empty() ? 'W' : track[0]);
+                t.moveSpeed = vehicleSheet_.cellInt(row, "Move Points", 0);
+                t.turnRate  = vehicleSheet_.cellInt(row, "Turn Rate", 0);
+                t.sight     = vehicleSheet_.cellInt(row, "Sight range", 0);
             }
         }
     }
@@ -228,25 +238,31 @@ bool TilesetView::loadMission(const QString& opmPath) {
         // from it — the per-type table is the single source of truth (no per-spawn re-lookup).
         populateType(u.typeId, mo.typeId);
         const op2::sim::UnitType& ut = world_.type(u.typeId);
-        u.kind      = ut.kind;
-        u.hitPoints = ut.maxHitPoints; // spawn at full health
+        u.kind      = ut.kind;     // damage 0: spawn at full health
         u.rotation = static_cast<std::uint8_t>((mo.direction & 7) * 32); // 8-dir → 16-facing byte
         // .opm Position is 1-based "game coordinates" — the editor subtracts (1,1) to get the
-        // 0-based map cell (UnitView.GetMapCoordinates). Store the 0-based cell. (The editor
-        // also inverts Y for Unity's bottom-up tilemap; we're top-down, so no invert.)
-        u.tileX    = mo.tileX - 1;
-        u.tileY    = mo.tileY - 1;
+        // 0-based map cell (UnitView.GetMapCoordinates). (The editor also inverts Y for Unity's
+        // bottom-up tilemap; we're top-down, so no invert.) For a structure that cell is its
+        // footprint's CENTRE tile; the unit's pixel is the footprint centre (coords.h), which
+        // for a 1×1 vehicle is the tile centre.
+        u.px = op2::sim::structurePx(mo.tileX - 1, ut.fpX);
+        u.py = op2::sim::structurePx(mo.tileY - 1, ut.fpY);
         u.cargoAmount = mo.cargoAmount;
         if (mo.isEden) u.flags |= op2::sim::UnitFlag::IsEden;
         // We don't model weapon-as-field yet: stash the weapon/cargo name id (prefixed)
         // so the renderer can recover it. (cargo is otherwise a TruckCargo enum.)
         if (!mo.cargoType.isEmpty() && mo.cargoType != QStringLiteral("None"))
             u.cargo = typeIdFor(QStringLiteral("w:") + mo.cargoType);
-        world_.spawn(u);
+        if (!world_.spawn(u).valid())  // OP2's limit: 0x3FF objects
+            Logger::log(QStringLiteral("  skip %1: no free object index").arg(mo.typeId));
     }
     // Map resources/markers/wreckage aren't player units — keep them as their own
     // list (placeResources turns them into sprites; rebuilt on toggle).
     missionResources_ = md.resources;
+    // A new game from tick 0. The local player is the only human (the others are the AI).
+    // Fixed seed for now: the game's own seed source isn't modelled.
+    world_.setHumanPlayers(static_cast<std::uint8_t>(1u << (localPlayer_ & 7)));
+    game_.restart(1);
     Logger::log(QStringLiteral("mission '%1': %2 objects → World, %3 resources")
                     .arg(md.description).arg(world_.liveCount())
                     .arg(missionResources_.size()));
@@ -394,7 +410,7 @@ void TilesetView::placeFromWorld() {
             const bool gpIdle     = (u.flags & op2::sim::UnitFlag::Idle);
             const bool gpDisabled = (u.flags & (op2::sim::UnitFlag::Disabled | op2::sim::UnitFlag::IsEMPed));
             const bool gpActive   = !gpIdle && !gpDisabled;
-            placeGuardPost(faction, weaponName, u.tileX, u.tileY, facing,
+            placeGuardPost(faction, weaponName, op2::sim::pixelToTile(u.px), op2::sim::pixelToTile(u.py), facing,
                            QString(), /*idleRotate=*/gpActive); // off GPs don't wander
             if (!placedUnits_.empty()) {
                 PlacedUnit& gpu = placedUnits_.back();
@@ -415,8 +431,8 @@ void TilesetView::placeFromWorld() {
                                 .arg(rawName, faction).arg(facing).arg(chassisGroup));
                 return;
             }
-            const int upX = u.tileX * T + T / 2;
-            const int upY = u.tileY * T + T / 2;
+            const int upX = u.px;
+            const int upY = u.py;
             int cdx = 0, cdy = 0;
             art_.groupDisplacement(chassisGroup, &cdx, &cdy);
             pu.originX = upX - cdx;  pu.originY = upY - cdy;
@@ -451,6 +467,14 @@ void TilesetView::placeFromWorld() {
                     pu.chassisGroup = chassisGroup;
                 }
             }
+            // syncVehicles' re-seat inputs (the sim moves and turns it).
+            pu.bodyDef = body;
+            pu.turretArt = turret;
+            pu.bodyRot = facing;
+            pu.turretRot = facing;
+            pu.seatUpX = upX;
+            pu.seatUpY = upY;
+            pu.chassisGroup = chassisGroup;
             pu.weapon = weaponName; // for the detail panel (empty for cargo trucks/unarmed)
             pu.sourceId = id; // link back to the World unit (for hover HP, status, etc.)
             placedUnits_.push_back(std::move(pu));
@@ -466,13 +490,11 @@ void TilesetView::placeFromWorld() {
                             .arg(rawName, faction));
             return;
         }
-        // OP2MissionEditor centers the footprint on Position (StructureView.GetStructureArea:
-        // xMin = pos - size/2, floored). So the .opm Position is the footprint CENTRE, and the
-        // top-left tile = pos - size/2 (integer division). Treating pos as top-left left a
-        // ~1-tile gap between adjacent buildings (e.g. Agridome|StructureFactory). Vehicles
-        // are 1×1 so their tile == Position; buildings shift by half the footprint.
-        const int tileX = u.tileX - bd->fpX / 2;
-        const int tileY = u.tileY - bd->fpY / 2;
+        // The unit's pixel is the footprint centre (set from the .opm Position, its centre
+        // tile, at load: OP2MissionEditor's StructureView.GetStructureArea takes
+        // xMin = pos - size/2). The top-left tile follows from the pixel.
+        const int tileX = op2::sim::structureTopLeft(u.px, bd->fpX);
+        const int tileY = op2::sim::structureTopLeft(u.py, bd->fpY);
         const bool eden = (faction == QStringLiteral("eden"));
         const std::size_t before = placed_.size();
         // Per-faction art, special cases included (resolveBuildingArt — the SAME table

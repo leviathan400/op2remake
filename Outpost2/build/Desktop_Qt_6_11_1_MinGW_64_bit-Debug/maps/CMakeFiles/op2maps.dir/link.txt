@@ -1,2 +1,0 @@
-C:\Qt\Tools\mingw1310_64\bin\ar.exe qc libop2maps.a CMakeFiles/op2maps.dir/src/maploader.cpp.obj CMakeFiles/op2maps.dir/src/op2maploader.cpp.obj CMakeFiles/op2maps.dir/src/opmloader.cpp.obj CMakeFiles/op2maps.dir/src/op2mapperjsonloader.cpp.obj
-C:\Qt\Tools\mingw1310_64\bin\ranlib.exe libop2maps.a

@@ -340,10 +340,12 @@ void TilesetView::paintMapContent(QPainter* painter, int firstCol, int firstRow,
         if (!found)
             for (const PlacedUnit& pu : placedUnits_)
                 if (pu.sourceId == selectedId_) {
+                    // A tile-sized box centred on the unit's pixel, so it rides along with
+                    // a driving vehicle.
                     const op2::sim::Unit* su = world_.get(pu.sourceId);
-                    const int cx = su ? su->tileX : pu.centerX / T;
-                    const int cy = su ? su->tileY : pu.centerY / T;
-                    box = QRect(cx * T, cy * T, T, T);
+                    const int cx = su ? su->px : pu.centerX;
+                    const int cy = su ? su->py : pu.centerY;
+                    box = QRect(cx - T / 2, cy - T / 2, T, T);
                     found = true; break;
                 }
         if (found) {
@@ -734,9 +736,9 @@ void TilesetView::rebuildSelectedInfo() {
             m[QStringLiteral("owner")]      = su->owner + 1;        // 1-based player for the title
             m[QStringLiteral("idx")]        = int(selectedId_.index); // stable per-object number
             m[QStringLiteral("gen")]        = int(selectedId_.generation); // handle generation
-            m[QStringLiteral("cellX")]      = su->tileX;            // 0-based map cell
-            m[QStringLiteral("cellY")]      = su->tileY;
-            m[QStringLiteral("hp")]         = su->hitPoints;
+            m[QStringLiteral("cellX")]      = op2::sim::pixelToTile(su->px); // 0-based map cell
+            m[QStringLiteral("cellY")]      = op2::sim::pixelToTile(su->py); // (a structure's centre tile)
+            m[QStringLiteral("hp")]         = world_.hitPoints(*su);
             m[QStringLiteral("maxHp")]      = t.maxHitPoints;
             m[QStringLiteral("armor")]      = t.armor;
             m[QStringLiteral("armorName")]  = armorClassName(t.armor);
@@ -781,11 +783,20 @@ void TilesetView::selectAt(qreal mouseX, qreal mouseY) {
     // Units (GuardPosts + vehicles), hit-tested via their World cell.
     for (auto it = placedUnits_.rbegin(); it != placedUnits_.rend(); ++it) {
         const op2::sim::Unit* su = world_.get(it->sourceId);
-        if (!su || su->tileX != tx || su->tileY != ty) continue;
+        if (!su || op2::sim::pixelToTile(su->px) != tx || op2::sim::pixelToTile(su->py) != ty) continue;
         selectedId_ = it->sourceId;
         rebuildSelectedInfo();
         emit selectionChanged();
         update();
+        return;
+    }
+    // Empty ground with one of the local player's vehicles selected: order it there. The
+    // order is a ctMoMove packet the sim applies at the start of its next tick (Game::step),
+    // like a network peer's; the selection stays.
+    if (const op2::sim::Unit* su = missionMode_ ? world_.get(selectedId_) : nullptr;
+        su && su->kind == op2::sim::UnitKind::Vehicle && su->owner == localPlayer_ &&
+        tx >= 0 && ty >= 0 && tx < map_.width() && ty < map_.height()) {
+        game_.queue(op2::sim::makeMoveCommand(game_.tick(), localPlayer_, selectedId_, tx, ty));
         return;
     }
     clearSelection(); // empty ground → deselect
@@ -807,8 +818,8 @@ void TilesetView::focusUnit(quint32 index, quint32 generation) {
     selectedId_ = id;
     rebuildSelectedInfo();
     emit selectionChanged();
-    // Centre the camera on the object's tile (centerOnMap clamps + repaints).
-    centerOnMap(su->tileX * T + T / 2.0, su->tileY * T + T / 2.0);
+    // Centre the camera on the object's pixel (centerOnMap clamps + repaints).
+    centerOnMap(su->px, su->py);
 }
 
 void TilesetView::setSelectedIdle(bool on) {
@@ -937,7 +948,7 @@ void TilesetView::updateHover(qreal mouseX, qreal mouseY) {
             auto hpStr = [&](const QString& name, const op2::sim::Unit* su) {
                 if (!su) return name;
                 const int mx = world_.type(su->typeId).maxHitPoints;
-                return mx > 0 ? name + QStringLiteral("  HP %1/%2").arg(su->hitPoints).arg(mx) : name;
+                return mx > 0 ? name + QStringLiteral("  HP %1/%2").arg(world_.hitPoints(*su)).arg(mx) : name;
             };
             for (const PlacedBuilding& pb : placed_) {
                 if (cx >= pb.tileX && cx < pb.tileX + pb.fpX &&
@@ -946,20 +957,20 @@ void TilesetView::updateHover(qreal mouseX, qreal mouseY) {
                     info = hpStr(pb.name, su);
                     objId = pb.sourceId; objName = pb.name; objFriendly = pb.friendly;
                     objBox = QRect(pb.tileX * T, pb.tileY * T, pb.fpX * T, pb.fpY * T);
-                    if (su) { objHp = su->hitPoints; objMaxHp = world_.type(su->typeId).maxHitPoints; }
+                    if (su) { objHp = world_.hitPoints(*su); objMaxHp = world_.type(su->typeId).maxHitPoints; }
                     break;
                 }
             }
             if (info.isEmpty())  // units: GuardPosts + vehicles, hit-tested via their World cell
                 for (const PlacedUnit& pu : placedUnits_) {
                     const op2::sim::Unit* su = world_.get(pu.sourceId);
-                    if (su && su->tileX == cx && su->tileY == cy) {
+                    if (su && op2::sim::pixelToTile(su->px) == cx && op2::sim::pixelToTile(su->py) == cy) {
                         const QString nm = (su->typeId < nameByTypeId_.size())
                                                ? nameByTypeId_[su->typeId] : QStringLiteral("Unit");
                         info = hpStr(nm, su);
                         objId = pu.sourceId; objName = nm; objFriendly = pu.friendly;
                         objBox = QRect(cx * T, cy * T, T, T);
-                        objHp = su->hitPoints; objMaxHp = world_.type(su->typeId).maxHitPoints;
+                        objHp = world_.hitPoints(*su); objMaxHp = world_.type(su->typeId).maxHitPoints;
                         break;
                     }
                 }

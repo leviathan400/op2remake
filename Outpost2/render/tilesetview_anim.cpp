@@ -18,6 +18,7 @@
 #include "logger.h"
 #include "missionloader.h"
 #include "op2/maps/maploader.h"
+#include "op2/sim/coords.h"
 
 namespace {
 constexpr int T = TilesetManager::kTileSize;
@@ -132,8 +133,61 @@ void TilesetView::advanceUnitTurrets(int gameTicks) {
     if (changed) update();
 }
 
+void TilesetView::seatVehicle(PlacedUnit& pu, int upX, int upY, int facing) {
+    if (facing != pu.bodyRot || pu.chassis.isNull()) {
+        pu.chassisGroup = pu.bodyDef->groups[facing];
+        blitUnitSprite(pu.chassisGroup, &pu.chassis, &pu.cAnchorX, &pu.cAnchorY);
+        pu.bodyRot = facing;
+    }
+    int cdx = 0, cdy = 0;
+    art_.groupDisplacement(pu.chassisGroup, &cdx, &cdy);
+    pu.originX = upX - cdx;  pu.originY = upY - cdy;
+    pu.tOriginX = pu.originX; pu.tOriginY = pu.originY;
+    pu.seatUpX = upX;        pu.seatUpY = upY;
+    if (!pu.turretArt) return;
+    // Same seating as placeFromWorld: the chassis frame's turret mount, less the turret
+    // group's displacement.
+    const int g = pu.turretArt->groups[pu.turretRot];
+    int ox = 0, oy = 0, tdx = 0, tdy = 0;
+    art_.frameTurretOffset(art_.groupFrameStart(pu.chassisGroup), &ox, &oy);
+    art_.groupDisplacement(g, &tdx, &tdy);
+    pu.tOriginX = upX + ox - tdx;  pu.tOriginY = upY + oy - tdy;
+}
+
+bool TilesetView::syncVehicles() {
+    bool changed = false;
+    for (PlacedUnit& pu : placedUnits_) {
+        if (!pu.bodyDef) continue;
+        const op2::sim::Unit* su = world_.get(pu.sourceId);
+        if (!su) return false;
+        const int facing = op2::sim::facing16(su->rotation);
+        const bool moved = su->px != pu.seatUpX || su->py != pu.seatUpY;
+        if (!moved && facing == pu.bodyRot) continue;
+        // While it drives the turret faces forward (an armed unit's own turret heading
+        // takes over once the sim aims it); the idle wander resumes when it stops.
+        const int turretRot = su->weapon ? op2::sim::facing16(su->turret) : facing;
+        const bool turretTurned = pu.turretArt && turretRot != pu.turretRot;
+        pu.turretRot = turretRot;
+        if (turretTurned)
+            blitUnitSprite(pu.turretArt->groups[turretRot], &pu.turret, &pu.tAnchorX, &pu.tAnchorY);
+        seatVehicle(pu, su->px, su->py, facing);
+        changed = true;
+    }
+    if (changed) update();
+    return true;
+}
+
 void TilesetView::advanceAnimation(int gameTicks) {
     if (gameTicks <= 0) return; // a frame with no game tick elapsed (low speed) — hold
+    // A mission runs the sim: one Game::step per game tick, then the vehicles are re-seated
+    // on their new pixels (a unit that left the World rebuilds the placed lists).
+    if (missionMode_) {
+        for (int i = 0; i < gameTicks; ++i)
+            for (const op2::sim::CommandPacket& p : game_.step())
+                Logger::log(QStringLiteral("command rejected: op %1 player %2 tick %3")
+                                .arg(p.op).arg(p.player).arg(p.tick));
+        if (!syncVehicles()) placeFromWorld();
+    }
     animTick_ += gameTicks;
     if (ambientUnitEnabled_) advanceUnitTurrets(gameTicks);
     if (ambientResourceEnabled_) advanceSprites(gameTicks); // vents/beacons/markers loop

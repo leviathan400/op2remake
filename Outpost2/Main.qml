@@ -122,8 +122,8 @@ Window {
                                 event.angleDelta.y, event.x, event.y)
                         }
                         // Left-click → SELECT the object under the cursor (shows the detail
-                        // panel / "7th view"); clicking empty ground deselects. (Later, with a
-                        // unit already selected, left-click will issue a move/command to it.)
+                        // panel / "7th view"); clicking empty ground deselects, or, with one of
+                        // your vehicles selected, sends it there (TilesetView::selectAt).
                         // Right-click → DESELECT the current object.
                         TapHandler {
                             acceptedButtons: Qt.LeftButton

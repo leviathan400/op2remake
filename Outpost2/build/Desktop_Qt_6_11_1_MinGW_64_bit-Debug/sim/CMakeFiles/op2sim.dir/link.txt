@@ -1,2 +1,0 @@
-C:\Qt\Tools\mingw1310_64\bin\ar.exe qc libop2sim.a CMakeFiles/op2sim.dir/src/op2sim.cpp.obj CMakeFiles/op2sim.dir/src/checksum.cpp.obj CMakeFiles/op2sim.dir/src/cmdlog.cpp.obj CMakeFiles/op2sim.dir/src/replay.cpp.obj CMakeFiles/op2sim.dir/src/techtree.cpp.obj CMakeFiles/op2sim.dir/src/sheet.cpp.obj CMakeFiles/op2sim.dir/src/morale.cpp.obj
-C:\Qt\Tools\mingw1310_64\bin\ranlib.exe libop2sim.a

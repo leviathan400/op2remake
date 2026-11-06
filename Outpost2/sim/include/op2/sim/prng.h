@@ -33,14 +33,18 @@ public:
 
     explicit Prng(std::uint32_t seed = 1) noexcept { setSeed(seed); }
 
-    // FUN_0046EFB0. Splits the 32-bit seed across the two LFSRs (high half ->
-    // state0, low half -> state1) so they start out of phase, and substitutes a
-    // non-zero constant for seed 0 to avoid the LFSR's one forbidden state.
+    // FUN_0046EFB0. state0 = (seed sar 16) | (seed & 0xFFFF0000), state1 =
+    // (seed << 16) | (seed & 0xFFFF); seed 0 is replaced by 0x10000001.
+    // The shift is ARITHMETIC (`sar eax,16` @0x46EFC2): a seed with bit 31 set
+    // fills state0's low half with ones. Seeds below 0x10000 leave state0 at 0,
+    // where that LFSR stays forever (the output is then state1 alone).
     void setSeed(std::uint32_t seed) noexcept {
         if (seed == 0) {
-            seed = 0x10000001u; // all-zero state is the LFSR death state
+            seed = 0x10000001u;
         }
-        state0_ = (seed >> 16) | (seed & 0xFFFF0000u);
+        // C++20 defines >> on a negative int as arithmetic.
+        state0_ = static_cast<std::uint32_t>(static_cast<std::int32_t>(seed) >> 16) |
+                  (seed & 0xFFFF0000u);
         state1_ = (seed << 16) | (seed & 0x0000FFFFu);
     }
 
